@@ -1,0 +1,46 @@
+# 开发机/无硬件联调配置。生产请用 tutor.yaml。
+# 相对路径以本文件所在目录为基准。
+
+agent:
+  dsh_home: ../.state/dsh-home
+  workspace: ../.state/workspace
+  system_prompt_file: tutor_system_prompt.md
+  patch_file: ../patches/voice-only.yml
+  session_id_file: ../.state/session_id
+  # 默认 DeepSeek；换千问百炼时见 config/tutor.qwen.yaml。
+  api_key_env: DEEPSEEK_API_KEY
+  provider_patch_file: ""
+  profile: sdk-minimal
+  provider: deepseek-official
+  model: deepseek-flash
+  max_tokens: 512
+  request_timeout_s: 90
+  answer_timeout_s: 75
+  log_transcripts: true
+  # true：进程重启后优先恢复上次会话；说“重新开始”会主动新建。
+  resume_session: true
+
+audio:
+  asr_topic: /prompt_text
+  tts_topic: /tts_text
+  device: plughw:0,0
+
+behavior:
+  wake_word: 你好地瓜
+  thinking_filler_delay_s: 1.5
+  thinking_filler: 让我想一想。
+  max_answer_chars: 600
+  max_sentence_chars: 80
+  reset_phrases:
+    - 重新开始
+    - 新对话
+    - 换个话题
+  startup_greeting: 小地瓜老师准备好啦。说你好地瓜，就可以开始。
+  startup_greeting_delay_s: 4.0
+  fallback_error: 哎呀，我的小脑袋卡住了。我们再说一次，好吗？
+  fallback_empty: 我没听清，可以再说一遍吗？
+  fallback_timeout: 这个问题有点难，我先想一想。你可以先说说你已经知道什么。
+
+status:
+  status_file: ../.state/status.json
+  log_level: DEBUG

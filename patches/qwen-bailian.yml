@@ -1,0 +1,60 @@
+# Optional provider patch: Alibaba Cloud Bailian / DashScope / Token Plan.
+#
+# DSH's built-in sdk-minimal adapter speaks the Anthropic Messages protocol,
+# so a Bailian key cannot be used by changing DEEPSEEK_BASE_URL alone.  This
+# patch adds the pi-ai adapter and three routes:
+#
+#   qwen                      ordinary DashScope API key (DASHSCOPE_API_KEY)
+#   qwen-token-plan-cn        Token Plan individual, China (QWEN_TOKEN_PLAN_CN_API_KEY)
+#   qwen-token-plan-individual Token Plan individual, international (QWEN_TOKEN_PLAN_API_KEY)
+#
+# The Token Plan routes use pi-ai's built-in model catalog, so qwen3.8-flash,
+# qwen3.7-plus, qwen3.7-max, etc. are available without listing them here.
+# Required environment: the key name matching the selected route.
+#
+# Select in config.yaml, for example:
+#   agent.provider: qwen-token-plan-cn
+#   agent.model: qwen3.8-flash
+#   agent.api_key_env: QWEN_TOKEN_PLAN_CN_API_KEY
+#   agent.provider_patch_file: /opt/magicbox-tutor/patches/qwen-bailian.yml
+- insert:
+    - id: llm-pi-ai-qwen
+      name: '@deepseek-ai/dsh-llm-pi-ai'
+      config:
+        providers:
+          # Ordinary DashScope / Bailian API key.
+          qwen:
+            displayName: Qwen Bailian (DashScope)
+            api: openai-completions
+            apiKeyEnv: DASHSCOPE_API_KEY
+            baseURL: https://dashscope.aliyuncs.com/compatible-mode/v1
+            defaultContextWindow: 131072
+            defaultMaxTokens: 8192
+            models:
+              - id: qwen3.8-flash
+                name: Qwen3.8 Flash
+                contextWindow: 1000000
+                maxTokens: 131072
+              - id: qwen-plus
+                name: Qwen Plus
+                contextWindow: 131072
+                maxTokens: 8192
+              - id: qwen-turbo
+                name: Qwen Turbo
+                contextWindow: 131072
+                maxTokens: 8192
+
+          # Token Plan individual subscription, China site.
+          # Endpoint/model metadata comes from pi-ai's installed catalog.
+          qwen-token-plan-cn:
+            apiKeyEnv: QWEN_TOKEN_PLAN_CN_API_KEY
+
+          # Token Plan individual subscription, international site.
+          qwen-token-plan-individual:
+            apiKeyEnv: QWEN_TOKEN_PLAN_API_KEY
+
+# DeepSeek-only request extensions are not used by the Qwen routes.
+- id: deepseek-llm-api-extensions
+  disabled: true
+- id: plugin-package-inventory-deepseek
+  disabled: true

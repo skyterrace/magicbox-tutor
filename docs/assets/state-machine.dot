@@ -1,0 +1,33 @@
+digraph MagicBoxStates {
+  graph [rankdir=LR, bgcolor="#ffffff", fontname="Noto Sans CJK SC", fontsize=11,
+         pad=0.3, nodesep=0.45, ranksep=0.55];
+  node [shape=box, style="rounded,filled", fontname="Noto Sans CJK SC", fontsize=10,
+        color="#94a3b8", penwidth=1.1, margin="0.18,0.11", fillcolor="#f8fafc"];
+  edge [fontname="Noto Sans CJK SC", fontsize=8.5, color="#64748b", arrowsize=0.65];
+
+  BOOT     [label="BOOT\n自检 / 模型预热", fillcolor="#e2e8f0"];
+  IDLE     [label="IDLE\n待机 · 呼吸灯", fillcolor="#dcfce7"];
+  LISTEN   [label="LISTENING\n唤醒 / 收音", fillcolor="#e0f2fe"];
+  THINK    [label="THINKING\nASR 完成 · LLM 推理", fillcolor="#fef9c3"];
+  SPEAK    [label="SPEAKING\nTTS 播报", fillcolor="#ede9fe"];
+  GESTURE  [label="GESTURE\n手势动作执行", fillcolor="#fce7f3"];
+  FAULT    [label="FAULT\n降级 / 可恢复", fillcolor="#fee2e2"];
+  ESTOP    [label="E-STOP\n动作停止 · 红灯", fillcolor="#fecaca"];
+
+  BOOT -> IDLE     [label="自检通过"];
+  BOOT -> FAULT    [label="关键服务失败"];
+  IDLE -> LISTEN   [label="按键 3 / 唤醒词"];
+  LISTEN -> THINK  [label="VAD 结束 / ASR final"];
+  LISTEN -> IDLE   [label="超时 8 s"];
+  THINK -> SPEAK   [label="首句 / TTS 开始"];
+  THINK -> IDLE    [label="超时 / 空结果"];
+  SPEAK -> LISTEN  [label="持续对话模式"];
+  SPEAK -> IDLE    [label="播报完成 · 单轮模式"];
+  IDLE -> GESTURE  [label="按键 2 / 手势触发"];
+  GESTURE -> IDLE  [label="动作完成 / 3 s 无输入"];
+  FAULT -> IDLE    [label="服务恢复"];
+  IDLE -> ESTOP    [label="长按按键 / 软件急停"];
+  GESTURE -> ESTOP [label="急停"];
+  LISTEN -> ESTOP  [label="急停"];
+  ESTOP -> BOOT    [label="复位并重新自检"];
+}

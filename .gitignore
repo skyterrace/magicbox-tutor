@@ -1,0 +1,12 @@
+.venv/
+.state/
+.dsh-voice-test/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+dist/
+build/
+*.egg-info/
+logs/
+status.json

@@ -1,0 +1,64 @@
+digraph VoiceTutor {
+  graph [rankdir=LR, bgcolor="#ffffff", fontname="Noto Sans CJK SC", fontsize=12,
+         pad=0.35, nodesep=0.35, ranksep=0.6, compound=true, newrank=true];
+  node [shape=box, style="rounded,filled", fontname="Noto Sans CJK SC", fontsize=10,
+        color="#94a3b8", penwidth=1.1, fillcolor="#ffffff", margin="0.16,0.10"];
+  edge [fontname="Noto Sans CJK SC", fontsize=8.5, color="#64748b", arrowsize=0.65];
+
+  subgraph cluster_child {
+    label="孩子"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    voice [label="说话\n“你好地瓜，三加四等于几？”", fillcolor="#e0f2fe"];
+    speaker [label="喇叭\n朗读回答", fillcolor="#e0f2fe"];
+  }
+
+  subgraph cluster_audio {
+    label="官方音频前端（不运行 qwen_llm）"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    audio [label="audio_io\nKWS 唤醒 · SenseVoice ASR\nMatcha TTS · 半双工", fillcolor="#dcfce7"];
+    alsa [label="ALSA hw:0,0\n麦克风 + 功放", fillcolor="#dcfce7"];
+  }
+
+  subgraph cluster_bridge {
+    label="语音编排（自研 Python / ROS 2）"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#fff7ed";
+    bridge [label="TutorNode\n订阅 /prompt_text\n发布 /tts_text + end", fillcolor="#ffedd5", penwidth=1.6, color="#f97316"];
+    service [label="TutorService\n单题串行 · 思考提示\n超时兜底 · 状态文件", fillcolor="#ffedd5"];
+    speech [label="Speech / Safety\n去 Markdown · 分句\n危机短路径", fillcolor="#ffedd5"];
+  }
+
+  subgraph cluster_agent {
+    label="Agent（DeepSeek Harness）"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#eef2ff";
+    sdk [label="Python SDK\nDSH_HOME / JSON-RPC", fillcolor="#e0e7ff"];
+    runtime [label="dsh runtime\nprofile = sdk-minimal\npatch = 禁用全部工具", fillcolor="#e0e7ff", penwidth=1.6, color="#6366f1"];
+    api [label="DeepSeek API\n仅发送文字", fillcolor="#e0e7ff"];
+  }
+
+  subgraph cluster_ops {
+    label="无终端运维"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    systemd [label="systemd\n自动启动 / 重启", fillcolor="#ede9fe"];
+    journal [label="journald\n日志", fillcolor="#ede9fe"];
+    status [label="status.json\n状态 / 延迟 / 错误", fillcolor="#ede9fe"];
+  }
+
+  voice -> alsa [label="语音"];
+  alsa -> audio [label="PCM"];
+  audio -> bridge [label="/prompt_text"];
+  bridge -> sdk [label="提问文字"];
+  sdk -> runtime [label="session.run"];
+  runtime -> api [label="HTTPS"];
+  api -> runtime [label="回答文字"];
+  runtime -> sdk [label="final_response"];
+  sdk -> bridge [label="回答"];
+  bridge -> service [label="生成 / 播报"];
+  service -> speech [label="清洗 / 分句"];
+  bridge -> audio [label="/tts_text\n最后发 end"];
+  audio -> alsa [label="PCM"];
+  alsa -> speaker [label="播放"];
+  systemd -> audio [label="启动/重启", style=dashed];
+  systemd -> bridge [label="启动/重启", style=dashed];
+  bridge -> status [label="更新", style=dashed];
+  bridge -> journal [label="stderr", style=dashed];
+}

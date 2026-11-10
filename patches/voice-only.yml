@@ -1,0 +1,15 @@
+# Voice tutor: no model-facing tools.
+# The child can only talk; the agent cannot read files, run shell commands,
+# browse the web, or modify the device.
+- id: persistent-bash
+  disabled: true
+- id: persistent-pwsh
+  disabled: true
+- id: tool-fs
+  disabled: true
+- id: tool-working-directory
+  disabled: true
+
+# Do not upload unaccepted session log events to the model provider.
+- id: session-log-deepseek
+  disabled: true

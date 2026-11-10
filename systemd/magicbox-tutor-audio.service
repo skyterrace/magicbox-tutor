@@ -1,0 +1,25 @@
+[Unit]
+Description=MagicBox Tutor audio front-end (wake word, ASR, TTS)
+Documentation=file:///opt/magicbox-tutor/README.md
+After=network.target
+Before=magicbox-tutor.service
+
+[Service]
+Type=simple
+User=__RUN_USER__
+Group=__RUN_GROUP__
+EnvironmentFile=-/etc/magicbox-tutor.env
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=/userdata/magicbox-tutor
+ExecStart=/opt/magicbox-tutor/scripts/run_audio.sh
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

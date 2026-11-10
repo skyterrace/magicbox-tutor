@@ -1,0 +1,72 @@
+digraph MagicBoxArch {
+  graph [rankdir=LR, bgcolor="#ffffff", fontname="Noto Sans CJK SC", fontsize=12,
+         pad=0.35, nodesep=0.32, ranksep=0.55, compound=true, newrank=true];
+  node [shape=box, style="rounded,filled", fontname="Noto Sans CJK SC", fontsize=10,
+        color="#94a3b8", penwidth=1.1, fillcolor="#ffffff", margin="0.16,0.10"];
+  edge [fontname="Noto Sans CJK SC", fontsize=8.5, color="#64748b", arrowsize=0.65,
+        penwidth=1.0];
+
+  subgraph cluster_human {
+    label="人与环境"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    voice [label="语音指令\n唤醒词 / 问答", fillcolor="#e0f2fe"];
+    hand  [label="手势与人体\n5 类手势 / 位置", fillcolor="#e0f2fe"];
+    scene [label="场景深度\n距离 / 存在", fillcolor="#e0f2fe"];
+  }
+
+  subgraph cluster_perception {
+    label="感知与交互服务（官方 C++ / BPU）"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    cam    [label="magicbox_mipi_cam\n双目 GS130WI\n1280×1080@120", fillcolor="#dcfce7"];
+    depth  [label="hobot_stereonet\nv2.4_int8\n23 fps（标称）", fillcolor="#dcfce7"];
+    handp  [label="人体/人手/手势流水线\nmono2d + hand_lmk\n+ hand_gesture", fillcolor="#dcfce7"];
+    audio  [label="audio_io\nKWS + SenseVoice ASR\n+ sherpa-onnx TTS", fillcolor="#dcfce7"];
+    llm    [label="qwen_llm\nQwen2.5-1.5B\nQ5_K_M / llama.cpp", fillcolor="#dcfce7"];
+  }
+
+  subgraph cluster_brain {
+    label="决策与编排（自研 Python）"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#fff7ed";
+    orch [label="magicbox_orchestrator\n状态机 · 优先级仲裁\n意图路由 · 知识库 · 看门狗", fillcolor="#ffedd5", penwidth=1.8, color="#f97316"];
+    kb   [label="受控知识库\nFAQ / 演示脚本 / 工具白名单", fillcolor="#ffedd5"];
+  }
+
+  subgraph cluster_action {
+    label="执行与表达"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    servo [label="舵机 x2\nPTK 7465 MG-D\nPWM 50 Hz", fillcolor="#fce7f3"];
+    led   [label="灯带 x4\nWS2812B\nSPI1 CS0", fillcolor="#fce7f3"];
+  }
+
+  subgraph cluster_ui {
+    label="展示与运维"; fontsize=11; fontcolor="#334155";
+    style="rounded,dashed"; color="#cbd5e1"; bgcolor="#f8fafc";
+    web   [label="Web 控制台 :8000\n状态 / 字幕 / 调试", fillcolor="#ede9fe"];
+    mon   [label="资源监控 :7999\nCPU / BPU / 内存", fillcolor="#ede9fe"];
+    ops   [label="systemd + 日志\nmagicbox-app.service\n健康检查 / 重启", fillcolor="#ede9fe"];
+  }
+
+  platform [label="RDK OS 1.0.0（Ubuntu 22.04）· TROS Humble / ROS 2 · 10 TOPS BPU · 8 GB LPDDR4 · 32 GB TF",
+            shape=box, style="rounded,filled", fillcolor="#f1f5f9", color="#94a3b8", fontsize=9.5];
+
+  voice -> audio [label="I2S hw:0,0"];
+  hand  -> cam   [style=dashed, color="#94a3b8"];
+  scene -> cam   [style=dashed, color="#94a3b8"];
+  cam -> depth   [label="双目图像"];
+  cam -> handp   [label="RGB / 共享内存"];
+  depth -> orch   [label="距离 / 存在性"];
+  handp -> orch   [label="/tros_perc_fusion"];
+  audio -> orch   [label="/prompt_text"];
+  orch -> llm     [label="受控提示词"];
+  llm -> audio    [label="/tts_text"];
+  llm -> orch     [label="结果 / 工具调用", style=dashed];
+  kb -> orch      [style=dashed];
+  orch -> servo   [label="动作 Action\n限幅 · 限速"];
+  orch -> led     [label="灯效命令"];
+  orch -> web     [label="状态 / 事件"];
+  orch -> ops     [label="心跳 / 健康"];
+  mon -> web      [style=dotted, label="同机部署"];
+
+  { rank=same; platform; }
+  platform -> cam [style=invis];
+}

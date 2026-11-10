@@ -1,0 +1,62 @@
+# MagicBox 小学生学习语音助手 —— 生产配置
+# 安装脚本会把它复制到 /etc/magicbox-tutor/config.yaml（不覆盖已有文件）。
+
+agent:
+  # DSH 的独立 home，保存 profile、会话与日志；权限应为 700。
+  dsh_home: /userdata/magicbox-tutor/dsh-home
+  # Agent 的工作目录。语音助手不需要读写项目文件，这里只作为 DSH 的 session cwd。
+  workspace: /userdata/magicbox-tutor/workspace
+  # 人设文件。修改后重启服务生效。
+  system_prompt_file: /etc/magicbox-tutor/tutor_system_prompt.md
+  # 关键安全补丁：禁用 shell、文件、网页等所有模型可用工具。
+  patch_file: /opt/magicbox-tutor/patches/voice-only.yml
+  session_id_file: /userdata/magicbox-tutor/state/session_id
+  # 默认 DeepSeek；换千问百炼时见 config/tutor.qwen.yaml。
+  api_key_env: DEEPSEEK_API_KEY
+  provider_patch_file: ""
+
+  # sdk-minimal 是“纯对话 + 持久会话 + 自动压缩”的最小组合。
+  # 不要改成 sdk / web，否则会重新暴露编码工具。
+  profile: sdk-minimal
+  provider: deepseek-official
+  model: deepseek-flash
+  max_tokens: 512
+  request_timeout_s: 90
+  # 超过这个时间仍未回答，先播报兜底话术；模型线程结束后才接受下一题。
+  answer_timeout_s: 75
+  # 默认不把孩子的原话写入日志。
+  log_transcripts: false
+  # true：进程重启后优先恢复上次会话；说“重新开始”会主动新建。
+  resume_session: true
+
+audio:
+  asr_topic: /prompt_text
+  tts_topic: /tts_text
+  # 运行时实际由 /etc/magicbox-tutor.env 的 AUDIO_DEVICE 控制；这里保留记录。
+  device: plughw:0,0
+  asr_model: /userdata/magicbox/config/sense-voice-small-fp16.gguf
+  tts_model_dir: /userdata/magicbox/dep/matcha-icefall-zh-baker
+  kws_model_dir: /userdata/magicbox/dep/sherpa-onnx/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+
+behavior:
+  # 仅用于从 ASR 文本中剔除唤醒词；实际 KWS 词表在 kws_model_dir/keywords.txt。
+  wake_word: 你好地瓜
+  # 孩子问完后，超过这个时间还没答案就先说一句“让我想一想”。
+  thinking_filler_delay_s: 1.5
+  thinking_filler: 让我想一想。
+  # 单次回答最多 600 字；每句最多 80 字，避免 TTS 一次读太长。
+  max_answer_chars: 600
+  max_sentence_chars: 80
+  reset_phrases:
+    - 重新开始
+    - 新对话
+    - 换个话题
+  startup_greeting: 小地瓜老师准备好啦。说你好地瓜，就可以开始。
+  startup_greeting_delay_s: 4.0
+  fallback_error: 哎呀，我的小脑袋卡住了。我们再说一次，好吗？
+  fallback_empty: 我没听清，可以再说一遍吗？
+  fallback_timeout: 这个问题有点难，我先想一想。你可以先说说你已经知道什么。
+
+status:
+  status_file: /run/magicbox-tutor/status.json
+  log_level: INFO

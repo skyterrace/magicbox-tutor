@@ -1,0 +1,30 @@
+[Unit]
+Description=MagicBox Tutor voice agent (DeepSeek Harness SDK)
+Documentation=file:///opt/magicbox-tutor/README.md
+After=magicbox-tutor-audio.service network-online.target
+Wants=network-online.target
+Wants=magicbox-tutor-audio.service
+
+[Service]
+Type=simple
+User=__RUN_USER__
+Group=__RUN_GROUP__
+EnvironmentFile=-/etc/magicbox-tutor.env
+Environment=PYTHONUNBUFFERED=1
+Environment=MAGICBOX_TUTOR_CONFIG=/etc/magicbox-tutor/config.yaml
+RuntimeDirectory=magicbox-tutor
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/magicbox-tutor
+ExecStart=/opt/magicbox-tutor/scripts/run_tutor.sh
+Restart=always
+RestartSec=5
+TimeoutStopSec=25
+KillSignal=SIGINT
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

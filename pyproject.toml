@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "magicbox-tutor"
+version = "0.1.0"
+description = "Voice-only primary-school tutor for RDK MagicBox, powered by DeepSeek Harness"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+  "PyYAML>=6.0",
+  "deepseek-harness-sdk==0.2.1rc2",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+magicbox-tutor = "magicbox_tutor.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

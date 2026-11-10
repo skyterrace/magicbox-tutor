@@ -1,0 +1,58 @@
+# 千问百炼（DashScope / OpenAI-compatible）示例配置。
+# 使用方式：
+#   sudo cp /etc/magicbox-tutor/tutor.qwen.yaml /etc/magicbox-tutor/config.yaml
+#   在 /etc/magicbox-tutor.env 填入 QWEN_TOKEN_PLAN_CN_API_KEY
+#   sudo systemctl restart magicbox-tutor
+#
+# 注意：DSH 自带的 sdk-minimal 适配器走 Anthropic Messages 协议，
+# 不能只改 DEEPSEEK_BASE_URL；必须加载 patches/qwen-bailian.yml 的 pi-ai 路由。
+#
+# 如果你用的是“普通百炼 API Key”而不是 Token Plan，改成：
+#   provider: qwen
+#   api_key_env: DASHSCOPE_API_KEY
+# 国际站 Token Plan 则用 provider: qwen-token-plan-individual / QWEN_TOKEN_PLAN_API_KEY。
+
+agent:
+  dsh_home: /userdata/magicbox-tutor/dsh-home
+  workspace: /userdata/magicbox-tutor/workspace
+  system_prompt_file: /etc/magicbox-tutor/tutor_system_prompt.md
+  patch_file: /opt/magicbox-tutor/patches/voice-only.yml
+  session_id_file: /userdata/magicbox-tutor/state/session_id
+  provider_patch_file: /opt/magicbox-tutor/patches/qwen-bailian.yml
+  api_key_env: QWEN_TOKEN_PLAN_CN_API_KEY
+  profile: sdk-minimal
+  provider: qwen-token-plan-cn
+  model: qwen3.8-flash
+  max_tokens: 512
+  request_timeout_s: 90
+  answer_timeout_s: 75
+  log_transcripts: false
+  resume_session: true
+
+audio:
+  asr_topic: /prompt_text
+  tts_topic: /tts_text
+  device: plughw:0,0
+  asr_model: /userdata/magicbox/config/sense-voice-small-fp16.gguf
+  tts_model_dir: /userdata/magicbox/dep/matcha-icefall-zh-baker
+  kws_model_dir: /userdata/magicbox/dep/sherpa-onnx/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+
+behavior:
+  wake_word: 你好地瓜
+  thinking_filler_delay_s: 1.5
+  thinking_filler: 让我想一想。
+  max_answer_chars: 600
+  max_sentence_chars: 80
+  reset_phrases:
+    - 重新开始
+    - 新对话
+    - 换个话题
+  startup_greeting: 小地瓜老师准备好啦。说你好地瓜，就可以开始。
+  startup_greeting_delay_s: 4.0
+  fallback_error: 哎呀，我的小脑袋卡住了。我们再说一次，好吗？
+  fallback_empty: 我没听清，可以再说一遍吗？
+  fallback_timeout: 这个问题有点难，我先想一想。你可以先说说你已经知道什么。
+
+status:
+  status_file: /run/magicbox-tutor/status.json
+  log_level: INFO
